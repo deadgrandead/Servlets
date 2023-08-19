@@ -1,5 +1,6 @@
 package com.deadgrandead.controller;
 
+import com.deadgrandead.exception.NotFoundException;
 import com.google.gson.Gson;
 import com.deadgrandead.model.Post;
 import com.deadgrandead.service.PostService;
@@ -23,8 +24,16 @@ public class PostController {
         response.getWriter().print(gson.toJson(data));
     }
 
-    public void getById(long id, HttpServletResponse response) {
-        // TODO: deserialize request & serialize response
+    public void getById(long id, HttpServletResponse response) throws IOException {
+        response.setContentType(APPLICATION_JSON);
+        final var gson = new Gson();
+        try {
+            final var post = service.getById(id);
+            response.getWriter().print(gson.toJson(post));
+        } catch (NotFoundException e) {
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            response.getWriter().print(gson.toJson("Post not found"));
+        }
     }
 
     public void save(Reader body, HttpServletResponse response) throws IOException {
@@ -35,7 +44,16 @@ public class PostController {
         response.getWriter().print(gson.toJson(data));
     }
 
-    public void removeById(long id, HttpServletResponse response) {
-        // TODO: deserialize request & serialize response
+    public void removeById(long id, HttpServletResponse response) throws IOException {
+        response.setContentType(APPLICATION_JSON);
+        final var gson = new Gson();
+        try {
+            service.removeById(id);
+            response.setStatus(HttpServletResponse.SC_OK);
+            response.getWriter().print(gson.toJson("Post removed successfully"));
+        } catch (NotFoundException e) {
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            response.getWriter().print(gson.toJson("Post not found"));
+        }
     }
 }

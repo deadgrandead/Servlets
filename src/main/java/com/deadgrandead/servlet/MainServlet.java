@@ -7,6 +7,7 @@ import com.deadgrandead.service.PostService;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 
 public class MainServlet extends HttpServlet {
     private PostController controller;
@@ -20,35 +21,34 @@ public class MainServlet extends HttpServlet {
 
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse resp) {
-        // если деплоились в root context, то достаточно этого
         try {
-            final var path = req.getRequestURI();
-            final var method = req.getMethod();
-            // primitive routing
-            if (method.equals("GET") && path.equals("/api/posts")) {
-                controller.all(resp);
-                return;
-            }
-            if (method.equals("GET") && path.matches("/api/posts/\\d+")) {
-                // easy way
-                final var id = Long.parseLong(path.substring(path.lastIndexOf("/")));
-                controller.getById(id, resp);
-                return;
-            }
-            if (method.equals("POST") && path.equals("/api/posts")) {
-                controller.save(req.getReader(), resp);
-                return;
-            }
-            if (method.equals("DELETE") && path.matches("/api/posts/\\d+")) {
-                // easy way
-                final var id = Long.parseLong(path.substring(path.lastIndexOf("/")));
-                controller.removeById(id, resp);
-                return;
-            }
-            resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            route(req, resp);
         } catch (Exception e) {
             e.printStackTrace();
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
+    }
+
+    private void route(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        final var path = req.getRequestURI();
+        final var method = req.getMethod();
+
+        if (method.equals("GET") && path.equals("/api/posts")) {
+            controller.all(resp);
+        } else if (method.equals("GET") && path.matches("/api/posts/\\d+")) {
+            final var id = extractIdFromPath(path);
+            controller.getById(id, resp);
+        } else if (method.equals("POST") && path.equals("/api/posts")) {
+            controller.save(req.getReader(), resp);
+        } else if (method.equals("DELETE") && path.matches("/api/posts/\\d+")) {
+            final var id = extractIdFromPath(path);
+            controller.removeById(id, resp);
+        } else {
+            resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+        }
+    }
+
+    private long extractIdFromPath(String path) {
+        return Long.parseLong(path.substring(path.lastIndexOf("/") + 1));
     }
 }
