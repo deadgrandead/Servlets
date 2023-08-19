@@ -10,6 +10,12 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 public class MainServlet extends HttpServlet {
+    private static final String API_POSTS = "/api/posts";
+    private static final String API_POSTS_WITH_ID = "/api/posts/\\d+";
+    private static final String METHOD_GET = "GET";
+    private static final String METHOD_POST = "POST";
+    private static final String METHOD_DELETE = "DELETE";
+    
     private PostController controller;
 
     @Override
@@ -33,14 +39,14 @@ public class MainServlet extends HttpServlet {
         final var path = req.getRequestURI();
         final var method = req.getMethod();
 
-        if (method.equals("GET") && path.equals("/api/posts")) {
+        if (METHOD_GET.equals(method) && API_POSTS.equals(path)) {
             controller.all(resp);
-        } else if (method.equals("GET") && path.matches("/api/posts/\\d+")) {
+        } else if (METHOD_GET.equals(method) && path.matches(API_POSTS_WITH_ID)) {
             final var id = extractIdFromPath(path);
             controller.getById(id, resp);
-        } else if (method.equals("POST") && path.equals("/api/posts")) {
+        } else if (METHOD_POST.equals(method) && API_POSTS.equals(path)) {
             controller.save(req.getReader(), resp);
-        } else if (method.equals("DELETE") && path.matches("/api/posts/\\d+")) {
+        } else if (METHOD_DELETE.equals(method) && path.matches(API_POSTS_WITH_ID)) {
             final var id = extractIdFromPath(path);
             controller.removeById(id, resp);
         } else {
